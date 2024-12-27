@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>お年玉抽選ツール</title>
+  <title>10連ガチャ風 お年玉抽選ツール</title>
   <!-- スマホ対応 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
@@ -59,31 +59,37 @@
     button:hover:enabled {
       background-color: #45a049;
     }
-    #billCountDisplay, #billTypesDisplay {
+    #drawArea {
       margin-top: 15px;
-      display: none;
     }
-    .roulette {
-      font-size: 1.5rem;
-      color: #333;
-      height: 1.5em;
-      margin-top: 10px;
-      margin-bottom: 15px;
+    .slot {
+      display: inline-block;
+      margin: 5px;
+      text-align: center;
+      vertical-align: top;
+      width: 90px;
+      height: 100px;
+      position: relative;
     }
-    .bill-image {
+    .slot img {
       width: 70px;
       height: auto;
-      margin: 4px;
       transition: transform 0.3s;
     }
-    .bill-image:hover {
+    .slot img:hover {
       transform: scale(1.1);
+    }
+    .slot .amount-label {
+      display: block;
+      font-size: 0.9rem;
+      margin-top: 3px;
+      color: #333;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🎉 お年玉抽選ツール 🎉</h1>
+    <h1>🎉 10連ガチャ風 お年玉抽選 🎉</h1>
 
     <!-- 学年区分選択 -->
     <div class="select-wrapper">
@@ -104,416 +110,268 @@
       </select>
     </div>
 
-    <!-- 紙幣枚数 抽選ボタン -->
-    <button id="drawNumberBtn" disabled>枚数を抽選</button>
+    <!-- 10連ガチャ開始ボタン -->
+    <button id="drawButton" disabled>10連ガチャを回す</button>
 
-    <!-- 紙幣枚数表示エリア -->
-    <div id="billCountDisplay">
-      <h2>紙幣の枚数: <span id="billCount">-</span> 枚</h2>
-      <div class="roulette" id="countRoulette"></div>
-      <!-- 金額抽選ボタン -->
-      <button id="drawTypeBtn">金額を抽選</button>
-    </div>
-
-    <!-- 紙幣種別表示エリア（画像を並べる） -->
-    <div id="billTypesDisplay">
-      <div id="billsContainer"></div>
-    </div>
+    <!-- 抽選結果のスロットエリア -->
+    <div id="drawArea"></div>
   </div>
 
-<script>
-/* ----------------------------------------------------------------
-  1) 枚数抽選の確率 ( gradeNumberDist ):
-     - 未就学児：2枚が70%、その他(1,3,4,5,6,7,8,9,10)を30%で均等割り
-     - 小1～小5：3枚が70%、その他を30%均等割り
-     - 小6～中2,中3：5枚が70%、その他を30%均等割り
-     - 高校生以上：10枚が70%、その他(1〜9枚)を30%均等割り
----------------------------------------------------------------- */
-const gradeNumberDist = {
-  "未就学児": makeNumberDist(2),
-  "小1":      makeNumberDist(3),
-  "小2":      makeNumberDist(3),
-  "小3":      makeNumberDist(3),
-  "小4":      makeNumberDist(3),
-  "小5":      makeNumberDist(3),
-  "小6":      makeNumberDist(5),
-  "中1":      makeNumberDist(5),
-  "中2":      makeNumberDist(5),
-  "中3":      makeNumberDist(5),  // 仮に同じ扱い
-  "高校生以上": makeNumberDist(10)
-};
+  <script>
+    // ==============================================================
+    // 1) 学年ごとの「金額+ハズレ」確率設定
+    //
+    // 例： 未就学児
+    //   2000円が70%、 残りは (3000,4000,5000,6000,7000,8000,9000,10000,ハズレ) = 9項目を30%で均等割 → each 3.3333%。
+    // ==============================================================
+    const distribution = {
+      "未就学児": [
+        { val: 2000,    prob: 0.70 },
+        { val: 3000,    prob: 0.0333333 },
+        { val: 4000,    prob: 0.0333333 },
+        { val: 5000,    prob: 0.0333333 },
+        { val: 6000,    prob: 0.0333333 },
+        { val: 7000,    prob: 0.0333333 },
+        { val: 8000,    prob: 0.0333333 },
+        { val: 9000,    prob: 0.0333333 },
+        { val: 10000,   prob: 0.0333333 },
+        { val: 'hzure', prob: 0.0333333 } // ハズレ
+      ],
+      "小1": [
+        { val: 3000,    prob: 0.70 },
+        { val: 2000,    prob: 0.0333333 },
+        { val: 4000,    prob: 0.0333333 },
+        { val: 5000,    prob: 0.0333333 },
+        { val: 6000,    prob: 0.0333333 },
+        { val: 7000,    prob: 0.0333333 },
+        { val: 8000,    prob: 0.0333333 },
+        { val: 9000,    prob: 0.0333333 },
+        { val: 10000,   prob: 0.0333333 },
+        { val: 'hzure', prob: 0.0333333 }
+      ],
+      "小2": [
+        { val: 3000,    prob: 0.70 },
+        { val: 2000,    prob: 0.0333333 },
+        { val: 4000,    prob: 0.0333333 },
+        { val: 5000,    prob: 0.0333333 },
+        { val: 6000,    prob: 0.0333333 },
+        { val: 7000,    prob: 0.0333333 },
+        { val: 8000,    prob: 0.0333333 },
+        { val: 9000,    prob: 0.0333333 },
+        { val: 10000,   prob: 0.0333333 },
+        { val: 'hzure', prob: 0.0333333 }
+      ],
+      "小3": [
+        { val: 3000,    prob: 0.70 },
+        { val: 2000,    prob: 0.0333333 },
+        { val: 4000,    prob: 0.0333333 },
+        { val: 5000,    prob: 0.0333333 },
+        { val: 6000,    prob: 0.0333333 },
+        { val: 7000,    prob: 0.0333333 },
+        { val: 8000,    prob: 0.0333333 },
+        { val: 9000,    prob: 0.0333333 },
+        { val: 10000,   prob: 0.0333333 },
+        { val: 'hzure', prob: 0.0333333 }
+      ],
+      "小4": [
+        { val: 3000,    prob: 0.70 },
+        { val: 2000,    prob: 0.0333333 },
+        { val: 4000,    prob: 0.0333333 },
+        { val: 5000,    prob: 0.0333333 },
+        { val: 6000,    prob: 0.0333333 },
+        { val: 7000,    prob: 0.0333333 },
+        { val: 8000,    prob: 0.0333333 },
+        { val: 9000,    prob: 0.0333333 },
+        { val: 10000,   prob: 0.0333333 },
+        { val: 'hzure', prob: 0.0333333 }
+      ],
+      "小5": [
+        { val: 3000,    prob: 0.70 },
+        { val: 2000,    prob: 0.0333333 },
+        { val: 4000,    prob: 0.0333333 },
+        { val: 5000,    prob: 0.0333333 },
+        { val: 6000,    prob: 0.0333333 },
+        { val: 7000,    prob: 0.0333333 },
+        { val: 8000,    prob: 0.0333333 },
+        { val: 9000,    prob: 0.0333333 },
+        { val: 10000,   prob: 0.0333333 },
+        { val: 'hzure', prob: 0.0333333 }
+      ],
+      "小6": [
+        { val: 5000,    prob: 0.70 },
+        { val: 2000,    prob: 0.0333333 },
+        { val: 3000,    prob: 0.0333333 },
+        { val: 4000,    prob: 0.0333333 },
+        { val: 6000,    prob: 0.0333333 },
+        { val: 7000,    prob: 0.0333333 },
+        { val: 8000,    prob: 0.0333333 },
+        { val: 9000,    prob: 0.0333333 },
+        { val: 10000,   prob: 0.0333333 },
+        { val: 'hzure', prob: 0.0333333 }
+      ],
+      "中1": [
+        { val: 5000,    prob: 0.70 },
+        { val: 2000,    prob: 0.0333333 },
+        { val: 3000,    prob: 0.0333333 },
+        { val: 4000,    prob: 0.0333333 },
+        { val: 6000,    prob: 0.0333333 },
+        { val: 7000,    prob: 0.0333333 },
+        { val: 8000,    prob: 0.0333333 },
+        { val: 9000,    prob: 0.0333333 },
+        { val: 10000,   prob: 0.0333333 },
+        { val: 'hzure', prob: 0.0333333 }
+      ],
+      "中2": [
+        { val: 5000,    prob: 0.70 },
+        { val: 2000,    prob: 0.0333333 },
+        { val: 3000,    prob: 0.0333333 },
+        { val: 4000,    prob: 0.0333333 },
+        { val: 6000,    prob: 0.0333333 },
+        { val: 7000,    prob: 0.0333333 },
+        { val: 8000,    prob: 0.0333333 },
+        { val: 9000,    prob: 0.0333333 },
+        { val: 10000,   prob: 0.0333333 },
+        { val: 'hzure', prob: 0.0333333 }
+      ],
+      "中3": [
+        { val: 5000,    prob: 0.70 },
+        { val: 2000,    prob: 0.0333333 },
+        { val: 3000,    prob: 0.0333333 },
+        { val: 4000,    prob: 0.0333333 },
+        { val: 6000,    prob: 0.0333333 },
+        { val: 7000,    prob: 0.0333333 },
+        { val: 8000,    prob: 0.0333333 },
+        { val: 9000,    prob: 0.0333333 },
+        { val: 10000,   prob: 0.0333333 },
+        { val: 'hzure', prob: 0.0333333 }
+      ],
+      "高校生以上": [
+        { val: 10000,   prob: 0.70 },
+        { val: 2000,    prob: 0.0333333 },
+        { val: 3000,    prob: 0.0333333 },
+        { val: 4000,    prob: 0.0333333 },
+        { val: 5000,    prob: 0.0333333 },
+        { val: 6000,    prob: 0.0333333 },
+        { val: 7000,    prob: 0.0333333 },
+        { val: 8000,    prob: 0.0333333 },
+        { val: 9000,    prob: 0.0333333 },
+        { val: 'hzure', prob: 0.0333333 }
+      ]
+    };
 
-/* ----------------------------------------------------------------
-   2) 金額抽選の確率 ( distributionData ) - 前回同様
-   「未就学児」： 2000円70％、3000〜10000円は30％均等
-   「小1～小5」： 3000円70％、その他 30％均等
-   「小6～中2,中3」： 5000円70％、その他 30％均等
-   「高校生以上」： 10000円70％、その他 30％均等
----------------------------------------------------------------- */
-const distributionData = {
-  "未就学児": [
-    { sum: 2000,  prob: 0.70 },
-    { sum: 3000,  prob: 0.0375 },
-    { sum: 4000,  prob: 0.0375 },
-    { sum: 5000,  prob: 0.0375 },
-    { sum: 6000,  prob: 0.0375 },
-    { sum: 7000,  prob: 0.0375 },
-    { sum: 8000,  prob: 0.0375 },
-    { sum: 9000,  prob: 0.0375 },
-    { sum: 10000, prob: 0.0375 },
-  ],
-  "小1": [
-    { sum: 3000,  prob: 0.70 },
-    { sum: 2000,  prob: 0.0375 },
-    { sum: 4000,  prob: 0.0375 },
-    { sum: 5000,  prob: 0.0375 },
-    { sum: 6000,  prob: 0.0375 },
-    { sum: 7000,  prob: 0.0375 },
-    { sum: 8000,  prob: 0.0375 },
-    { sum: 9000,  prob: 0.0375 },
-    { sum: 10000, prob: 0.0375 },
-  ],
-  "小2": [
-    { sum: 3000,  prob: 0.70 },
-    { sum: 2000,  prob: 0.0375 },
-    { sum: 4000,  prob: 0.0375 },
-    { sum: 5000,  prob: 0.0375 },
-    { sum: 6000,  prob: 0.0375 },
-    { sum: 7000,  prob: 0.0375 },
-    { sum: 8000,  prob: 0.0375 },
-    { sum: 9000,  prob: 0.0375 },
-    { sum: 10000, prob: 0.0375 },
-  ],
-  "小3": [
-    { sum: 3000,  prob: 0.70 },
-    { sum: 2000,  prob: 0.0375 },
-    { sum: 4000,  prob: 0.0375 },
-    { sum: 5000,  prob: 0.0375 },
-    { sum: 6000,  prob: 0.0375 },
-    { sum: 7000,  prob: 0.0375 },
-    { sum: 8000,  prob: 0.0375 },
-    { sum: 9000,  prob: 0.0375 },
-    { sum: 10000, prob: 0.0375 },
-  ],
-  "小4": [
-    { sum: 3000,  prob: 0.70 },
-    { sum: 2000,  prob: 0.0375 },
-    { sum: 4000,  prob: 0.0375 },
-    { sum: 5000,  prob: 0.0375 },
-    { sum: 6000,  prob: 0.0375 },
-    { sum: 7000,  prob: 0.0375 },
-    { sum: 8000,  prob: 0.0375 },
-    { sum: 9000,  prob: 0.0375 },
-    { sum: 10000, prob: 0.0375 },
-  ],
-  "小5": [
-    { sum: 3000,  prob: 0.70 },
-    { sum: 2000,  prob: 0.0375 },
-    { sum: 4000,  prob: 0.0375 },
-    { sum: 5000,  prob: 0.0375 },
-    { sum: 6000,  prob: 0.0375 },
-    { sum: 7000,  prob: 0.0375 },
-    { sum: 8000,  prob: 0.0375 },
-    { sum: 9000,  prob: 0.0375 },
-    { sum: 10000, prob: 0.0375 },
-  ],
-  "小6": [
-    { sum: 5000,  prob: 0.70 },
-    { sum: 2000,  prob: 0.0375 },
-    { sum: 3000,  prob: 0.0375 },
-    { sum: 4000,  prob: 0.0375 },
-    { sum: 6000,  prob: 0.0375 },
-    { sum: 7000,  prob: 0.0375 },
-    { sum: 8000,  prob: 0.0375 },
-    { sum: 9000,  prob: 0.0375 },
-    { sum: 10000, prob: 0.0375 },
-  ],
-  "中1": [
-    { sum: 5000,  prob: 0.70 },
-    { sum: 2000,  prob: 0.0375 },
-    { sum: 3000,  prob: 0.0375 },
-    { sum: 4000,  prob: 0.0375 },
-    { sum: 6000,  prob: 0.0375 },
-    { sum: 7000,  prob: 0.0375 },
-    { sum: 8000,  prob: 0.0375 },
-    { sum: 9000,  prob: 0.0375 },
-    { sum: 10000, prob: 0.0375 },
-  ],
-  "中2": [
-    { sum: 5000,  prob: 0.70 },
-    { sum: 2000,  prob: 0.0375 },
-    { sum: 3000,  prob: 0.0375 },
-    { sum: 4000,  prob: 0.0375 },
-    { sum: 6000,  prob: 0.0375 },
-    { sum: 7000,  prob: 0.0375 },
-    { sum: 8000,  prob: 0.0375 },
-    { sum: 9000,  prob: 0.0375 },
-    { sum: 10000, prob: 0.0375 },
-  ],
-  "中3": [
-    { sum: 5000,  prob: 0.70 },
-    { sum: 2000,  prob: 0.0375 },
-    { sum: 3000,  prob: 0.0375 },
-    { sum: 4000,  prob: 0.0375 },
-    { sum: 6000,  prob: 0.0375 },
-    { sum: 7000,  prob: 0.0375 },
-    { sum: 8000,  prob: 0.0375 },
-    { sum: 9000,  prob: 0.0375 },
-    { sum: 10000, prob: 0.0375 },
-  ],
-  "高校生以上": [
-    { sum: 10000, prob: 0.70 },
-    { sum: 2000,  prob: 0.0375 },
-    { sum: 3000,  prob: 0.0375 },
-    { sum: 4000,  prob: 0.0375 },
-    { sum: 5000,  prob: 0.0375 },
-    { sum: 6000,  prob: 0.0375 },
-    { sum: 7000,  prob: 0.0375 },
-    { sum: 8000,  prob: 0.0375 },
-    { sum: 9000,  prob: 0.0375 },
-  ]
-};
+    // 2) 紙幣画像とハズレ画像
+    const imageMap = {
+      1000: 'kitasato.png',  // 1000円
+      5000: 'umeko.png',     // 5000円
+      10000: 'shibusawa.png',// 10000円
+      hazure: 'hazure.png'
+    };
 
-// 紙幣画像（1000・5000・10000 の3種類）
-const billImages = {
-  1000: 'kitasato.png',
-  5000: 'umeko.png',
-  10000: 'shibusawa.png'
-};
+    // ------------------------------------------------
+    // DOM取得
+    // ------------------------------------------------
+    const gradeSelect = document.getElementById('gradeSelect');
+    const drawButton  = document.getElementById('drawButton');
+    const drawArea    = document.getElementById('drawArea');
 
-// ------------------------------------------
-// DOM要素
-// ------------------------------------------
-const gradeSelect   = document.getElementById('gradeSelect');
-const drawNumberBtn = document.getElementById('drawNumberBtn');
-const drawTypeBtn   = document.getElementById('drawTypeBtn');
-const countRoulette = document.getElementById('countRoulette');
+    // 学年未選択時はボタン無効
+    gradeSelect.addEventListener('change', () => {
+      drawButton.disabled = (gradeSelect.value === "");
+    });
 
-const billCountDisplay = document.getElementById('billCountDisplay');
-const billCountSpan    = document.getElementById('billCount');
+    // ------------------------------------------------
+    // 10連ガチャを回す処理
+    // ------------------------------------------------
+    drawButton.addEventListener('click', () => {
+      drawArea.innerHTML = ''; // リセット
 
-const billTypesDisplay = document.getElementById('billTypesDisplay');
-const billsContainer   = document.getElementById('billsContainer');
-
-// グローバル変数
-let numberOfBills = 0; // 抽選された"枚数"
-let finalSum      = 0; // 抽選された"合計金額"
-
-
-// ----------------------------------------------------------------
-// 学年未選択なら「枚数を抽選」ボタンを押せないよう制御
-// ----------------------------------------------------------------
-gradeSelect.addEventListener('change', () => {
-  if (gradeSelect.value === "") {
-    drawNumberBtn.disabled = true;
-  } else {
-    drawNumberBtn.disabled = false;
-  }
-});
-
-// ----------------------------------------------------------------
-// (1) 枚数を抽選
-//    - 1.5秒ほどルーレット演出（1〜10をランダム表示）
-//    - 演出終了後、学年別の確率分布から最終枚数を決定
-// ----------------------------------------------------------------
-drawNumberBtn.addEventListener('click', () => {
-  billCountDisplay.style.display = 'none';
-  billTypesDisplay.style.display = 'none';
-  billsContainer.innerHTML = '';
-  numberOfBills = 0;
-  finalSum = 0;
-
-  // ルーレット演出
-  const duration = 1500; // ms
-  let startTime  = null;
-  let spinTimer  = null;
-
-  function spin(timestamp) {
-    if (!startTime) startTime = timestamp;
-    const elapsed = timestamp - startTime;
-
-    // 1〜10 の中から見せかけのルーレット値
-    const tmp = getRandomInt(1, 10);
-    countRoulette.textContent = tmp + '枚';
-
-    if (elapsed < duration) {
-      spinTimer = requestAnimationFrame(spin);
-    } else {
-      cancelAnimationFrame(spinTimer);
-      countRoulette.textContent = '';
-
-      // 学年ごとの確率分布に基づいて最終枚数を決定
       const grade = gradeSelect.value;
-      numberOfBills = drawNumberOfBills(grade); 
-      
-      billCountSpan.textContent = numberOfBills;
-      billCountDisplay.style.display = 'block';
+      const dist  = distribution[grade];
+      let total   = 0; // 合計金額
+
+      // 10回リズムよく表示
+      let index = 0;
+      const maxPulls = 10;
+
+      function pullOne() {
+        if (index >= maxPulls) {
+          // 終了
+          setTimeout(() => {
+            alert(`10連ガチャ終了！ 合計：${total}円`);
+          }, 500);
+          return;
+        }
+        index++;
+
+        // 1) スロット要素をあらかじめ作成（回転アニメ等あればここで対応可）
+        const slotDiv = document.createElement('div');
+        slotDiv.className = 'slot';
+        const img = document.createElement('img');
+        img.src = ''; // 後で確定
+        const label = document.createElement('span');
+        label.className = 'amount-label';
+
+        slotDiv.appendChild(img);
+        slotDiv.appendChild(label);
+        drawArea.appendChild(slotDiv);
+
+        // 2) 簡単な演出：0.5秒後に結果を確定
+        setTimeout(() => {
+          const val = drawOneValue(dist); // 1回分の抽選
+          if (val === 'hzure') {
+            // ハズレ
+            img.src = imageMap['hazure'];
+            label.textContent = 'ハズレ';
+          } else {
+            // 当たり(2000〜10000)
+            total += val;
+            // 表示用に"最大紙幣"を判定
+            const biggest = getBiggestBill(val);
+            img.src = imageMap[biggest];
+            label.textContent = `${val}円`;
+          }
+        }, 500);
+
+        // 次の抽選へ 1秒後くらいに呼び出す
+        setTimeout(pullOne, 1000);
+      }
+      pullOne();
+    });
+
+    // ------------------------------------------------
+    // 1回分の抽選
+    // ------------------------------------------------
+    function drawOneValue(dist) {
+      const r = Math.random();
+      let cumulative = 0;
+      for (let i = 0; i < dist.length; i++) {
+        cumulative += dist[i].prob;
+        if (r <= cumulative) {
+          return dist[i].val;
+        }
+      }
+      // 念のため
+      return dist[0].val;
     }
-  }
-  requestAnimationFrame(spin);
-});
 
-// ----------------------------------------------------------------
-// (2) 金額を抽選
-//    - 学年区分に応じた"金額"確率分布から合計金額を決定
-//    - numberOfBills枚に分解できるかをチェックし、ダメなら再抽選
-// ----------------------------------------------------------------
-drawTypeBtn.addEventListener('click', () => {
-  billTypesDisplay.style.display = 'none';
-  billsContainer.innerHTML = '';
-
-  const grade = gradeSelect.value;
-  const dist  = distributionData[grade];
-
-  let attempts = 0;
-  const MAX_ATTEMPTS = 100;
-  let success = false;
-
-  while (!success && attempts < MAX_ATTEMPTS) {
-    attempts++;
-    finalSum = drawFinalSum(dist); // 確率分布から1つ抽選
-    if (canDecompose(finalSum, numberOfBills)) {
-      success = true;
+    // ------------------------------------------------
+    // 金額 val(2000,3000,...10000) の中で
+    // 最大紙幣(1000,5000,10000)を返す
+    //   2000 → 1000
+    //   3000 → 1000
+    //   4000 → 1000
+    //   5000 → 5000
+    //   6000 → 5000
+    //   7000 → 5000
+    //   8000 → 5000
+    //   9000 → 5000
+    //   10000 →10000
+    // ------------------------------------------------
+    function getBiggestBill(val) {
+      if (val === 10000) return 10000;
+      if (val >= 5000)   return 5000;
+      return 1000; // 2000〜4000
     }
-  }
-
-  if (!success) {
-    alert("エラーが発生しました。もう一度お試しください。");
-    return;
-  }
-
-  // numberOfBills枚の組合せで分解
-  const bills = decompose(finalSum, numberOfBills);
-  bills.forEach(b => {
-    const img = document.createElement('img');
-    img.src   = billImages[b];
-    img.alt   = `${b}円`;
-    img.className = 'bill-image';
-    billsContainer.appendChild(img);
-  });
-
-  billTypesDisplay.style.display = 'block';
-
-  // 結果表示
-  setTimeout(() => {
-    alert(`あなたの今年のお年玉は ${finalSum} 円！`);
-  }, 400);
-});
-
-// ----------------------------------------------------
-// ■ 学年ごとの「枚数」確率分布を生成する関数
-//   mainNumが70%、それ以外の(1〜10, except mainNum)を
-//   30%で均等割り
-// ----------------------------------------------------
-function makeNumberDist(mainNum) {
-  // 1〜10 の中で mainNum だけが70%,
-  // 残り9つの数字に合計30%を均等に割り当て = 30%/9 ≈ 0.0333
-  const arr = [];
-  const others = [];
-  for (let i=1; i<=10; i++){
-    if (i === mainNum) {
-      arr.push({ count: i, prob: 0.70 });
-    } else {
-      others.push(i);
-    }
-  }
-  const pOthers = 0.30 / others.length; // 9 だと 0.0333...
-  for (let o of others) {
-    arr.push({ count: o, prob: pOthers });
-  }
-  return arr;
-}
-
-// ----------------------------------------------------
-// ■ 学年ごとの「枚数」分布から1つ抽選
-// ----------------------------------------------------
-function drawNumberOfBills(grade) {
-  const dist = gradeNumberDist[grade]; // [{count, prob}, ...]
-  const r = Math.random();
-  let cumulative = 0;
-  for (let i = 0; i < dist.length; i++) {
-    cumulative += dist[i].prob;
-    if (r <= cumulative) {
-      return dist[i].count;
-    }
-  }
-  // 念のため
-  return dist[0].count;
-}
-
-// ----------------------------------------------------
-// ■ 学年ごとの「金額」分布から1つ抽選
-// ----------------------------------------------------
-function drawFinalSum(dist) {
-  const r = Math.random();
-  let cumulative = 0;
-  for (let i = 0; i < dist.length; i++) {
-    cumulative += dist[i].prob;
-    if (r <= cumulative) {
-      return dist[i].sum;
-    }
-  }
-  // 念のため
-  return dist[0].sum;
-}
-
-// ----------------------------------------------------
-// finalSumを "exactly numberOfBills 枚" の(1000,5000,10000)で
-// 構成できるかを判定 (true/false)
-// ----------------------------------------------------
-function canDecompose(finalSum, numberOfBills) {
-  const minPossible = 1000 * numberOfBills;
-  const maxPossible = 10000 * numberOfBills;
-  if (finalSum < minPossible || finalSum > maxPossible) {
-    return false;
-  }
-  return tryGreedyDecompose(finalSum, numberOfBills);
-}
-
-// ----------------------------------------------------
-// グリーディ法で分解試行：
-// なるべく大きい紙幣から詰め、最後にピッタリならtrue
-// ----------------------------------------------------
-function tryGreedyDecompose(amount, billsCount) {
-  let used = 0;
-  let rem  = amount;
-  const denominations = [10000, 5000, 1000];
-
-  for (let d of denominations) {
-    while (rem >= d && used < billsCount) {
-      rem  -= d;
-      used++;
-    }
-  }
-  return (rem === 0 && used === billsCount);
-}
-
-// ----------------------------------------------------
-// finalSumを実際に numberOfBills 枚の(1000,5000,10000)に分解
-// (canDecomposeがtrueの場合を想定)
-// ----------------------------------------------------
-function decompose(finalSum, numberOfBills) {
-  let rem   = finalSum;
-  let used  = 0;
-  const out = [];
-  const denominations = [10000, 5000, 1000];
-
-  for (let d of denominations) {
-    while (rem >= d && used < numberOfBills) {
-      rem  -= d;
-      used++;
-      out.push(d);
-    }
-  }
-  return out; 
-}
-
-// ----------------------------------------------------
-// min〜max の整数乱数
-// ----------------------------------------------------
-function getRandomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-</script>
+  </script>
 </body>
 </html>
