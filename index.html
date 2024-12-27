@@ -131,90 +131,52 @@ const imageMap = {
 
 //===================================================================
 // 2) メインパターン(70%)とサブパターン(30%)を各学年区分に定義
-//   - メインパターン = 学年別の代表合計金額を作る10個の組み合わせ
-//   - サブパターン = その他の合計(2000/3000/4000/...10000)を複数通り用意（約10通り）
-//   ここでは各学年につき
-//    メイン: 1通り
-//    サブ:   10通り
+//   (省略なし完全版、各学年メイン1つ+サブ10個ずつ、comboはすべて要素10個)
 //===================================================================
 const patternByGrade = {
-  // --------------------------
-  //  未就学児
-  //  メイン： 1000x2 + ハズレ8 = 2000円
-  // --------------------------
+  // --- 以下は前の回答の完全版をコピペ ---
   "未就学児": {
     main: {
       combo: [1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"],
       prob: 0.70
     },
     subs: [
-      // 3000円
       { combo: [1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 4000円
       { combo: [1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 5000円
       { combo: [5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 1000×5 =5000円 別パターン
       { combo: [1000,1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure"] },
-      // 7000円
       { combo: [5000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(1枚)
       { combo: [10000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(5000×2)
       { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(1000×10)
       { combo: [1000,1000,1000,1000,1000,1000,1000,1000,1000,1000] },
-      // 9000円
       { combo: [5000,1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(5000×2) 別パターン
       { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
     ]
   },
-
-  // --------------------------
-  //  小1
-  //  メイン： 1000x3 + ハズレ7 = 3000円
-  // --------------------------
   "小1": {
     main: {
       combo: [1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"],
       prob: 0.70
     },
     subs: [
-      // 2000円
       { combo: [1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 4000円
       { combo: [1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 5000円
       { combo: [5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(1枚)
       { combo: [10000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 5000円(1000×5)
       { combo: [1000,1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(5000×2)
       { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(1000×10)
       { combo: [1000,1000,1000,1000,1000,1000,1000,1000,1000,1000] },
-      // 7000円
       { combo: [5000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 8000円
       { combo: [5000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 9000円
       { combo: [5000,1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure"] },
     ]
   },
-
-  // --------------------------
-  //  小2
-  //  メイン： 1000x3 + ハズレ7 = 3000円
-  // --------------------------
   "小2": {
     main: {
       combo: [1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"],
       prob: 0.70
     },
     subs: [
-      // 以下、小1 と同じ構成
       { combo: [1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
       { combo: [1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
       { combo: [5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
@@ -227,150 +189,84 @@ const patternByGrade = {
       { combo: [5000,1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure"] },
     ]
   },
-
-  // --------------------------
-  //  小3
-  //  メイン： 1000x3 + ハズレ7 = 3000円
-  // --------------------------
   "小3": {
     main: {
       combo: [1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"],
       prob: 0.70
     },
     subs: [
-      // 2000円
       { combo: [1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 4000円
       { combo: [1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 5000円
       { combo: [5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(1枚)
       { combo: [10000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 5000円(1000×5)
       { combo: [1000,1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(5000×2)
       { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(1000×10)
       { combo: [1000,1000,1000,1000,1000,1000,1000,1000,1000,1000] },
-      // 7000円
       { combo: [5000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 8000円
       { combo: [5000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 9000円
       { combo: [5000,1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure"] },
     ]
   },
-
-  // --------------------------
-  //  小4
-  //  メイン： 1000x3 + ハズレ7 = 3000円
-  // --------------------------
   "小4": {
     main: {
       combo: [1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"],
       prob: 0.70
     },
     subs: [
-      // 2000円
       { combo: [1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 4000円
       { combo: [1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 5000円
       { combo: [5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(1枚)
       { combo: [10000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 5000円(1000×5)
       { combo: [1000,1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(5000×2)
       { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(1000×10)
       { combo: [1000,1000,1000,1000,1000,1000,1000,1000,1000,1000] },
-      // 7000円
       { combo: [5000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 8000円
       { combo: [5000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 9000円
       { combo: [5000,1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure"] },
     ]
   },
-
-  // --------------------------
-  //  小5
-  //  メイン： 1000x3 + ハズレ7 = 3000円
-  // --------------------------
   "小5": {
     main: {
       combo: [1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"],
       prob: 0.70
     },
     subs: [
-      // 2000円
       { combo: [1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 4000円
       { combo: [1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 5000円
       { combo: [5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円
       { combo: [10000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 5000円(1000×5)
       { combo: [1000,1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(5000×2)
       { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(1000×10)
       { combo: [1000,1000,1000,1000,1000,1000,1000,1000,1000,1000] },
-      // 7000円
       { combo: [5000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 8000円
       { combo: [5000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 9000円
       { combo: [5000,1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure"] },
     ]
   },
-
-  // --------------------------
-  //  小6
-  //  メイン： 5000×1 + ハズレ9 = 5000円
-  // --------------------------
   "小6": {
     main: {
       combo: [5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"],
       prob: 0.70
     },
     subs: [
-      // 2000円
       { combo: [1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 3000円
       { combo: [1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 4000円
       { combo: [1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 7000円
       { combo: [5000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 8000円
       { combo: [5000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 9000円
       { combo: [5000,1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(5000×2)
       { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(1000×10)
       { combo: [1000,1000,1000,1000,1000,1000,1000,1000,1000,1000] },
-      // 10000円(1枚)
       { combo: [10000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(5000×2)2回目
       { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
     ]
   },
-
-  // --------------------------
-  //  中1
-  //  メイン： 5000×1 + ハズレ9 = 5000円
-  // --------------------------
   "中1": {
     main: {
       combo: [5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"],
       prob: 0.70
     },
     subs: [
-      // 小6と同様
       { combo: [1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
       { combo: [1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
       { combo: [1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
@@ -383,11 +279,6 @@ const patternByGrade = {
       { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
     ]
   },
-
-  // --------------------------
-  //  中2
-  //  メイン： 5000×1 + ハズレ9 = 5000円
-  // --------------------------
   "中2": {
     main: {
       combo: [5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"],
@@ -406,88 +297,57 @@ const patternByGrade = {
       { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
     ]
   },
-
-  // --------------------------
-  //  中3
-  //  メイン： 5000×1 + ハズレ9 = 5000円
-  // --------------------------
  "中3": {
     main: {
       combo: [5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"],
       prob: 0.70
     },
     subs: [
-      // 2000円（1000×2）
       { combo: [1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 3000円（1000×3）
       { combo: [1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 4000円（1000×4）
       { combo: [1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 7000円（5000 + 1000×2）
       { combo: [5000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 8000円（5000 + 1000×3）
       { combo: [5000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 9000円（5000 + 1000×4）
       { combo: [5000,1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(5000×2)
       { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(1000×10)
       { combo: [1000,1000,1000,1000,1000,1000,1000,1000,1000,1000] },
-      // 10000円(1枚)
       { combo: [10000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(5000×2) 別アレンジ
       { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
     ]
   },
-
-  // --------------------------
-  //  高校生以上
-  //  メイン： 10000×1 + ハズレ9 = 10000円
-  // --------------------------
   "高校生以上": {
     main: {
       combo: [10000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"],
       prob: 0.70
     },
     subs: [
-      // 2000円
       { combo: [1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 3000円
       { combo: [1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 4000円
       { combo: [1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 5000円
       { combo: [5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 6000円
       { combo: [5000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 7000円
       { combo: [5000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 8000円
       { combo: [5000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 9000円
       { combo: [5000,1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(5000×2)
       { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // 10000円(1000×10)
       { combo: [1000,1000,1000,1000,1000,1000,1000,1000,1000,1000] },
     ]
   }
 };
 
 //---------------------------------------------------------
-// DOMの取得
+// イベントリスナー
 //---------------------------------------------------------
 const gradeSelect = document.getElementById('gradeSelect');
 const drawButton  = document.getElementById('drawButton');
 const drawArea    = document.getElementById('drawArea');
 
-// 学年未選択ならボタン無効
 gradeSelect.addEventListener('change', () => {
   drawButton.disabled = (gradeSelect.value === "");
 });
 
 //---------------------------------------------------------
-// 10連ガチャを回す
+// 10連ガチャを回す (非同期問題を回避するために currentIndex を使用)
 //---------------------------------------------------------
 drawButton.addEventListener('click', () => {
   drawArea.innerHTML = ''; // リセット
@@ -495,42 +355,42 @@ drawButton.addEventListener('click', () => {
   const gradeData = patternByGrade[gradeSelect.value];
   if (!gradeData) return;
 
-  // 1) 「メインパターン」(prob=0.70) か「サブパターン」(30%を分割) のいずれかを選ぶ
+  // メイン or サブ を確率で選ぶ
   const r = Math.random();
   let finalCombo;
   if (r <= gradeData.main.prob) {
     finalCombo = gradeData.main.combo;
   } else {
-    // サブパターンから1つ均等に選ぶ
     const subs = gradeData.subs;
-    // サブパターンは合計で30% → それを subs.length で均等割り (1サブパターンあたり => 0.30 / subs.length)
-    // 例: subsが10個なら1つあたり3%
-    const x = (r - gradeData.main.prob) / 0.30; // 0〜1 の範囲に正規化
-    const idx = Math.floor(x * subs.length);    // 0〜(subs.length-1)
+    const x = (r - gradeData.main.prob) / 0.30; 
+    const idx = Math.floor(x * subs.length);
     finalCombo = subs[idx].combo;
   }
 
-  // 2) 順序をシャッフルしてリズムよく表示
+  // シャッフル
   const shuffled = shuffleArray(finalCombo.slice());
-  const total = calcTotal(finalCombo); // 合計金額(並び順関係なく)
+  const total = calcTotal(finalCombo);
 
   let index = 0;
   const maxPulls = 10;
 
   function pullOne() {
+    // ループ終了判定
     if (index >= maxPulls) {
-      // 10回終了後に合計金額を表示
       setTimeout(() => {
-        alert(`あなたの今年のお年玉は${total}円`);
+        alert(`10連ガチャ終了！ 合計：${total}円`);
       }, 400);
       return;
     }
+
+    // 今のindexをローカル変数に保存 (setTimeoutのズレを防ぐ)
+    const currentIndex = index;
+    index++;
 
     // スロット要素を作成
     const slotDiv = document.createElement('div');
     slotDiv.className = 'slot';
     const img = document.createElement('img');
-    img.src = '';
     const label = document.createElement('span');
     label.className = 'amount-label';
 
@@ -538,11 +398,11 @@ drawButton.addEventListener('click', () => {
     slotDiv.appendChild(label);
     drawArea.appendChild(slotDiv);
 
-    // 0.3秒後に結果確定
+    // 0.3秒後に結果を確定
     setTimeout(() => {
-      const val = shuffled[index];
+      const val = shuffled[currentIndex];
       if (val === "hazure") {
-        img.src = imageMap["hazure"];
+        img.src = imageMap.hazure;
         label.textContent = "ハズレ";
       } else {
         img.src = imageMap[val];
@@ -550,11 +410,11 @@ drawButton.addEventListener('click', () => {
       }
     }, 300);
 
-    index++;
-    // 次のスロットを 0.6秒後に
+    // 次の抽選へ 0.6秒後
     setTimeout(pullOne, 600);
   }
-  pullOne();
+
+  pullOne(); // 最初の呼び出し
 });
 
 //---------------------------------------------------------
@@ -562,7 +422,7 @@ drawButton.addEventListener('click', () => {
 //---------------------------------------------------------
 function shuffleArray(arr) {
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i+1));
+    const j = Math.floor(Math.random()*(i+1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
