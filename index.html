@@ -22,12 +22,20 @@
             box-shadow: 0 8px 16px rgba(0,0,0,0.3);
             width: 90%;
             max-width: 500px;
+            position: relative;
         }
 
         h1 {
             font-size: 2em;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             color: #ff4500;
+        }
+
+        select {
+            font-size: 1em;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
         }
 
         button {
@@ -51,6 +59,15 @@
             display: none;
         }
 
+        /* 紙幣のルーレット演出用 */
+        .roulette {
+            font-size: 2em;
+            color: #333;
+            height: 1.5em;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
         .bill-image {
             width: 80px;
             height: auto;
@@ -66,92 +83,250 @@
 <body>
     <div class="container">
         <h1>🎉 お年玉抽選ツール 🎉</h1>
+        
+        <!-- 学年区分選択 -->
+        <div>
+            <label for="gradeSelect">学年を選択：</label>
+            <select id="gradeSelect">
+                <option value="未就学児">未就学児</option>
+                <option value="小1">小1</option>
+                <option value="小2">小2</option>
+                <option value="小3">小3</option>
+                <option value="小4">小4</option>
+                <option value="小5">小5</option>
+                <option value="小6">小6</option>
+                <option value="中1">中1</option>
+                <option value="中2">中2</option>
+                <option value="中3">中3</option>
+                <option value="高校生以上">高校生以上</option>
+            </select>
+        </div>
+
+        <!-- 紙幣枚数 抽選ボタン -->
         <button id="drawNumberBtn">紙幣枚数を抽選する</button>
+        
+        <!-- 紙幣枚数表示エリア -->
         <div id="billCountDisplay">
             <h2>紙幣の枚数: <span id="billCount">-</span> 枚</h2>
+            <div class="roulette" id="countRoulette"></div>
+            <!-- 種別抽選ボタン -->
             <button id="drawTypeBtn">紙幣の種別を抽選する</button>
         </div>
+        
+        <!-- 紙幣種別表示エリア -->
         <div id="billTypesDisplay">
             <div id="billsContainer"></div>
         </div>
     </div>
 
     <script>
+        // DOM要素取得
+        const gradeSelect = document.getElementById('gradeSelect');
         const drawNumberBtn = document.getElementById('drawNumberBtn');
         const drawTypeBtn = document.getElementById('drawTypeBtn');
         const billCountDisplay = document.getElementById('billCountDisplay');
         const billCountSpan = document.getElementById('billCount');
+        const countRoulette = document.getElementById('countRoulette');
         const billTypesDisplay = document.getElementById('billTypesDisplay');
         const billsContainer = document.getElementById('billsContainer');
 
-        const billValues = [1000, 5000, 10000];
+        // 紙幣の種類は 1000, 5000, 10000 のみ
         const billImages = {
-            1000: 'kitasato.png',
-            5000: 'umeko.png',
-            10000: 'shibusawa.png'
+            1000: 'kitasato.png',   // 1000円
+            5000: 'umeko.png',      // 5000円
+            10000: 'shibusawa.png'  // 10000円
         };
 
-        let numberOfBills = 0;
-        let billTypes = [];
-        const MIN_AMOUNT = 2000;
-        const MAX_AMOUNT = 10000;
-        const MAX_ATTEMPTS = 100;
+        // 学年区分ごとの "1枚あたり" の紙幣出現確率 [1000, 5000, 10000]
+        // 例) 未就学児：1000円70%、5000円15%、10000円15%
+        const gradeProbabilities = {
+            '未就学児':    [0.70, 0.15, 0.15],
+            // 小1～小5 => 5000円70%、その他(1000円, 10000円)15%ずつ
+            '小1':         [0.15, 0.70, 0.15],
+            '小2':         [0.15, 0.70, 0.15],
+            '小3':         [0.15, 0.70, 0.15],
+            '小4':         [0.15, 0.70, 0.15],
+            '小5':         [0.15, 0.70, 0.15],
+            // 小6～中3 => 5000円70%、その他(1000円, 10000円)15%ずつ
+            '小6':         [0.15, 0.70, 0.15],
+            '中1':         [0.15, 0.70, 0.15],
+            '中2':         [0.15, 0.70, 0.15],
+            '中3':         [0.15, 0.70, 0.15],
+            // 高校生以上 => 10000円70%、その他(1000円, 5000円)15%ずつ
+            '高校生以上':  [0.15, 0.15, 0.70]
+        };
 
+        // 上下限設定
+        const MIN_AMOUNT = 2000;   // 2000円以上
+        const MAX_AMOUNT = 10000;  // 10000円以下
+        const MAX_ATTEMPTS = 100;  // 自動再抽選の最大試行回数
+
+        // グローバル変数
+        let numberOfBills = 0;    // 抽選された紙幣の枚数
+        let billTypes = [];       // 抽選された各紙幣の金額
+
+        // イベントリスナー
         drawNumberBtn.addEventListener('click', drawNumber);
         drawTypeBtn.addEventListener('click', drawTypes);
 
+        // ------------------------------------------------------------
+        // 1) 紙幣枚数を抽選する（簡易ルーレット演出）
+        // ------------------------------------------------------------
         function drawNumber() {
-            numberOfBills = getRandomInt(1, 10);
-            billCountSpan.textContent = numberOfBills;
-            billCountDisplay.style.display = 'block';
-            billTypesDisplay.style.display = 'none';
-            billsContainer.innerHTML = '';
+            // ルーレット演出時間
+            const duration = 1500; // ms
+            let startTime = null;
+            let spinTimer = null;
+
+            function startRoulette(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+
+                // 1〜10のランダムな数字をルーレット風に表示
+                const randNum = getRandomInt(1, 10);
+                countRoulette.textContent = randNum + ' 枚';
+
+                // durationミリ秒間、ルーレットを回す
+                if (elapsed < duration) {
+                    spinTimer = requestAnimationFrame(startRoulette);
+                } else {
+                    // ルーレット終了 → 最終決定
+                    cancelAnimationFrame(spinTimer);
+                    numberOfBills = getRandomInt(1, 10); // 実際の最終抽選
+                    billCountSpan.textContent = numberOfBills;
+
+                    // ルーレット表示リセット
+                    countRoulette.textContent = '';
+                    billCountDisplay.style.display = 'block';
+                    billTypesDisplay.style.display = 'none';
+                    billsContainer.innerHTML = '';
+                }
+            }
+            requestAnimationFrame(startRoulette);
         }
 
+        // ------------------------------------------------------------
+        // 2) 紙幣の種別を抽選する（1枚ずつルーレット演出）＋ 自動再抽選
+        // ------------------------------------------------------------
         function drawTypes() {
             let attempts = 0;
-            let valid = false;
+            let isValid = false;
             let total = 0;
             billTypes = [];
 
-            while (!valid && attempts < MAX_ATTEMPTS) {
+            // 学年区分から確率分布を取得
+            const grade = gradeSelect.value;
+            const dist = gradeProbabilities[grade];
+
+            // 条件に合うまで最大MAX_ATTEMPTS回再抽選
+            while (!isValid && attempts < MAX_ATTEMPTS) {
                 attempts++;
                 billTypes = [];
                 total = 0;
+
                 for (let i = 0; i < numberOfBills; i++) {
-                    const bill = billValues[getRandomInt(0, billValues.length - 1)];
+                    const bill = drawOneBill(dist);
                     billTypes.push(bill);
                     total += bill;
                 }
+
                 if (total >= MIN_AMOUNT && total <= MAX_AMOUNT) {
-                    valid = true;
+                    isValid = true;
                 }
             }
 
-            if (valid) {
-                displayBills(billTypes);
-                setTimeout(() => {
-                    alert(`あなたの今年のお年玉は${total}円！`);
-                }, 500);
+            // 結果を表示
+            if (isValid) {
+                billsContainer.innerHTML = '';
+                billTypesDisplay.style.display = 'block';
+
+                // 1枚ずつルーレット演出で表示 → 最後に合計ポップアップ
+                let index = 0;
+                const showNextBill = () => {
+                    if (index >= billTypes.length) {
+                        // 全て表示後に合計金額をポップアップ
+                        setTimeout(() => {
+                            alert(`あなたの今年のお年玉は${total}円！`);
+                        }, 500);
+                        return;
+                    }
+                    animateBillRoulette(index, () => {
+                        index++;
+                        showNextBill();
+                    });
+                };
+                showNextBill();
+
             } else {
-                // 条件に合う金額が出るまで再抽選を自動で行います
+                // 条件に合う金額が出るまで再抽選
                 drawTypes();
             }
         }
 
-        function displayBills(bills) {
-            billsContainer.innerHTML = '';
-            bills.forEach(bill => {
-                const img = document.createElement('img');
-                img.src = billImages[bill];
-                img.alt = `${bill}円`;
-                img.className = 'bill-image';
-                billsContainer.appendChild(img);
-            });
-            billTypesDisplay.style.display = 'block';
+        // ------------------------------------------------------------
+        // 指定の確率dist = [p1, p2, p3] に従って
+        // [1000, 5000, 10000] のどれかを返す
+        // ------------------------------------------------------------
+        function drawOneBill(dist) {
+            const r = Math.random();
+            let cumulative = 0;
+            // dist[0] → 1000円, dist[1] → 5000円, dist[2] → 10000円
+            for (let i = 0; i < dist.length; i++) {
+                cumulative += dist[i];
+                if (r <= cumulative) {
+                    return i === 0 ? 1000 : (i === 1 ? 5000 : 10000);
+                }
+            }
+            // 念のため
+            return 1000;
         }
 
+        // ------------------------------------------------------------
+        // 紙幣1枚分のルーレット演出
+        // ------------------------------------------------------------
+        function animateBillRoulette(index, callback) {
+            const rouletteDuration = 800; // ルーレットを回す時間
+            let startTime = null;
+            let spinTimer = null;
+
+            // ルーレット用の暫定表示要素を追加
+            const placeholder = document.createElement('div');
+            placeholder.style.fontSize = '1.2em';
+            placeholder.style.margin = '10px';
+            placeholder.textContent = '🔄 抽選中...';
+            billsContainer.appendChild(placeholder);
+
+            function spin(timestamp) {
+                if (!startTime) startTime = timestamp;
+                const elapsed = timestamp - startTime;
+
+                // 1000 or 5000 or 10000 をランダムで表示(演出)
+                const tmpVal = [1000, 5000, 10000][getRandomInt(0, 2)];
+                placeholder.textContent = `🔄 ${tmpVal}円`;
+
+                if (elapsed < rouletteDuration) {
+                    spinTimer = requestAnimationFrame(spin);
+                } else {
+                    // 実際の最終結果に置き換え
+                    cancelAnimationFrame(spinTimer);
+                    const finalBill = billTypes[index];
+                    placeholder.remove();
+
+                    const img = document.createElement('img');
+                    img.src = billImages[finalBill];
+                    img.alt = `${finalBill}円`;
+                    img.className = 'bill-image';
+                    billsContainer.appendChild(img);
+
+                    if (callback) callback();
+                }
+            }
+            requestAnimationFrame(spin);
+        }
+
+        // ------------------------------------------------------------
         // ランダムな整数を取得（minからmaxの範囲、両端含む）
+        // ------------------------------------------------------------
         function getRandomInt(min, max) {
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
