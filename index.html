@@ -122,134 +122,155 @@
   </div>
 
 <script>
-/* -----------------------------------------------------------
-  ■ 学年区分と確率
-  「未就学児」： 2000円70％、3000〜10000円は30％を8通り均等割り
-  「小1～小5」： 3000円70％、2000円/4000〜10000円は30％を8通り均等割り
-  「小6～中3」： 5000円70％、2000〜4000円/6000〜10000円は30％を8通り均等割り
-  「高校生以上」： 10000円70％、2000〜9000円は30％を8通り均等割り
------------------------------------------------------------ */
+/* ----------------------------------------------------------------
+  1) 枚数抽選の確率 ( gradeNumberDist ):
+     - 未就学児：2枚が70%、その他(1,3,4,5,6,7,8,9,10)を30%で均等割り
+     - 小1～小5：3枚が70%、その他を30%均等割り
+     - 小6～中2,中3：5枚が70%、その他を30%均等割り
+     - 高校生以上：10枚が70%、その他(1〜9枚)を30%均等割り
+---------------------------------------------------------------- */
+const gradeNumberDist = {
+  "未就学児": makeNumberDist(2),
+  "小1":      makeNumberDist(3),
+  "小2":      makeNumberDist(3),
+  "小3":      makeNumberDist(3),
+  "小4":      makeNumberDist(3),
+  "小5":      makeNumberDist(3),
+  "小6":      makeNumberDist(5),
+  "中1":      makeNumberDist(5),
+  "中2":      makeNumberDist(5),
+  "中3":      makeNumberDist(5),  // 仮に同じ扱い
+  "高校生以上": makeNumberDist(10)
+};
+
+/* ----------------------------------------------------------------
+   2) 金額抽選の確率 ( distributionData ) - 前回同様
+   「未就学児」： 2000円70％、3000〜10000円は30％均等
+   「小1～小5」： 3000円70％、その他 30％均等
+   「小6～中2,中3」： 5000円70％、その他 30％均等
+   「高校生以上」： 10000円70％、その他 30％均等
+---------------------------------------------------------------- */
 const distributionData = {
   "未就学児": [
-    { sum: 2000, prob: 0.70 },
-    { sum: 3000, prob: 0.0375 },
-    { sum: 4000, prob: 0.0375 },
-    { sum: 5000, prob: 0.0375 },
-    { sum: 6000, prob: 0.0375 },
-    { sum: 7000, prob: 0.0375 },
-    { sum: 8000, prob: 0.0375 },
-    { sum: 9000, prob: 0.0375 },
+    { sum: 2000,  prob: 0.70 },
+    { sum: 3000,  prob: 0.0375 },
+    { sum: 4000,  prob: 0.0375 },
+    { sum: 5000,  prob: 0.0375 },
+    { sum: 6000,  prob: 0.0375 },
+    { sum: 7000,  prob: 0.0375 },
+    { sum: 8000,  prob: 0.0375 },
+    { sum: 9000,  prob: 0.0375 },
     { sum: 10000, prob: 0.0375 },
   ],
   "小1": [
-    { sum: 3000, prob: 0.70 },
-    { sum: 2000, prob: 0.0375 },
-    { sum: 4000, prob: 0.0375 },
-    { sum: 5000, prob: 0.0375 },
-    { sum: 6000, prob: 0.0375 },
-    { sum: 7000, prob: 0.0375 },
-    { sum: 8000, prob: 0.0375 },
-    { sum: 9000, prob: 0.0375 },
+    { sum: 3000,  prob: 0.70 },
+    { sum: 2000,  prob: 0.0375 },
+    { sum: 4000,  prob: 0.0375 },
+    { sum: 5000,  prob: 0.0375 },
+    { sum: 6000,  prob: 0.0375 },
+    { sum: 7000,  prob: 0.0375 },
+    { sum: 8000,  prob: 0.0375 },
+    { sum: 9000,  prob: 0.0375 },
     { sum: 10000, prob: 0.0375 },
   ],
   "小2": [
-    { sum: 3000, prob: 0.70 },
-    { sum: 2000, prob: 0.0375 },
-    { sum: 4000, prob: 0.0375 },
-    { sum: 5000, prob: 0.0375 },
-    { sum: 6000, prob: 0.0375 },
-    { sum: 7000, prob: 0.0375 },
-    { sum: 8000, prob: 0.0375 },
-    { sum: 9000, prob: 0.0375 },
+    { sum: 3000,  prob: 0.70 },
+    { sum: 2000,  prob: 0.0375 },
+    { sum: 4000,  prob: 0.0375 },
+    { sum: 5000,  prob: 0.0375 },
+    { sum: 6000,  prob: 0.0375 },
+    { sum: 7000,  prob: 0.0375 },
+    { sum: 8000,  prob: 0.0375 },
+    { sum: 9000,  prob: 0.0375 },
     { sum: 10000, prob: 0.0375 },
   ],
   "小3": [
-    { sum: 3000, prob: 0.70 },
-    { sum: 2000, prob: 0.0375 },
-    { sum: 4000, prob: 0.0375 },
-    { sum: 5000, prob: 0.0375 },
-    { sum: 6000, prob: 0.0375 },
-    { sum: 7000, prob: 0.0375 },
-    { sum: 8000, prob: 0.0375 },
-    { sum: 9000, prob: 0.0375 },
+    { sum: 3000,  prob: 0.70 },
+    { sum: 2000,  prob: 0.0375 },
+    { sum: 4000,  prob: 0.0375 },
+    { sum: 5000,  prob: 0.0375 },
+    { sum: 6000,  prob: 0.0375 },
+    { sum: 7000,  prob: 0.0375 },
+    { sum: 8000,  prob: 0.0375 },
+    { sum: 9000,  prob: 0.0375 },
     { sum: 10000, prob: 0.0375 },
   ],
   "小4": [
-    { sum: 3000, prob: 0.70 },
-    { sum: 2000, prob: 0.0375 },
-    { sum: 4000, prob: 0.0375 },
-    { sum: 5000, prob: 0.0375 },
-    { sum: 6000, prob: 0.0375 },
-    { sum: 7000, prob: 0.0375 },
-    { sum: 8000, prob: 0.0375 },
-    { sum: 9000, prob: 0.0375 },
+    { sum: 3000,  prob: 0.70 },
+    { sum: 2000,  prob: 0.0375 },
+    { sum: 4000,  prob: 0.0375 },
+    { sum: 5000,  prob: 0.0375 },
+    { sum: 6000,  prob: 0.0375 },
+    { sum: 7000,  prob: 0.0375 },
+    { sum: 8000,  prob: 0.0375 },
+    { sum: 9000,  prob: 0.0375 },
     { sum: 10000, prob: 0.0375 },
   ],
   "小5": [
-    { sum: 3000, prob: 0.70 },
-    { sum: 2000, prob: 0.0375 },
-    { sum: 4000, prob: 0.0375 },
-    { sum: 5000, prob: 0.0375 },
-    { sum: 6000, prob: 0.0375 },
-    { sum: 7000, prob: 0.0375 },
-    { sum: 8000, prob: 0.0375 },
-    { sum: 9000, prob: 0.0375 },
+    { sum: 3000,  prob: 0.70 },
+    { sum: 2000,  prob: 0.0375 },
+    { sum: 4000,  prob: 0.0375 },
+    { sum: 5000,  prob: 0.0375 },
+    { sum: 6000,  prob: 0.0375 },
+    { sum: 7000,  prob: 0.0375 },
+    { sum: 8000,  prob: 0.0375 },
+    { sum: 9000,  prob: 0.0375 },
     { sum: 10000, prob: 0.0375 },
   ],
   "小6": [
-    { sum: 5000, prob: 0.70 },
-    { sum: 2000, prob: 0.0375 },
-    { sum: 3000, prob: 0.0375 },
-    { sum: 4000, prob: 0.0375 },
-    { sum: 6000, prob: 0.0375 },
-    { sum: 7000, prob: 0.0375 },
-    { sum: 8000, prob: 0.0375 },
-    { sum: 9000, prob: 0.0375 },
+    { sum: 5000,  prob: 0.70 },
+    { sum: 2000,  prob: 0.0375 },
+    { sum: 3000,  prob: 0.0375 },
+    { sum: 4000,  prob: 0.0375 },
+    { sum: 6000,  prob: 0.0375 },
+    { sum: 7000,  prob: 0.0375 },
+    { sum: 8000,  prob: 0.0375 },
+    { sum: 9000,  prob: 0.0375 },
     { sum: 10000, prob: 0.0375 },
   ],
   "中1": [
-    { sum: 5000, prob: 0.70 },
-    { sum: 2000, prob: 0.0375 },
-    { sum: 3000, prob: 0.0375 },
-    { sum: 4000, prob: 0.0375 },
-    { sum: 6000, prob: 0.0375 },
-    { sum: 7000, prob: 0.0375 },
-    { sum: 8000, prob: 0.0375 },
-    { sum: 9000, prob: 0.0375 },
+    { sum: 5000,  prob: 0.70 },
+    { sum: 2000,  prob: 0.0375 },
+    { sum: 3000,  prob: 0.0375 },
+    { sum: 4000,  prob: 0.0375 },
+    { sum: 6000,  prob: 0.0375 },
+    { sum: 7000,  prob: 0.0375 },
+    { sum: 8000,  prob: 0.0375 },
+    { sum: 9000,  prob: 0.0375 },
     { sum: 10000, prob: 0.0375 },
   ],
   "中2": [
-    { sum: 5000, prob: 0.70 },
-    { sum: 2000, prob: 0.0375 },
-    { sum: 3000, prob: 0.0375 },
-    { sum: 4000, prob: 0.0375 },
-    { sum: 6000, prob: 0.0375 },
-    { sum: 7000, prob: 0.0375 },
-    { sum: 8000, prob: 0.0375 },
-    { sum: 9000, prob: 0.0375 },
+    { sum: 5000,  prob: 0.70 },
+    { sum: 2000,  prob: 0.0375 },
+    { sum: 3000,  prob: 0.0375 },
+    { sum: 4000,  prob: 0.0375 },
+    { sum: 6000,  prob: 0.0375 },
+    { sum: 7000,  prob: 0.0375 },
+    { sum: 8000,  prob: 0.0375 },
+    { sum: 9000,  prob: 0.0375 },
     { sum: 10000, prob: 0.0375 },
   ],
   "中3": [
-    { sum: 5000, prob: 0.70 },
-    { sum: 2000, prob: 0.0375 },
-    { sum: 3000, prob: 0.0375 },
-    { sum: 4000, prob: 0.0375 },
-    { sum: 6000, prob: 0.0375 },
-    { sum: 7000, prob: 0.0375 },
-    { sum: 8000, prob: 0.0375 },
-    { sum: 9000, prob: 0.0375 },
+    { sum: 5000,  prob: 0.70 },
+    { sum: 2000,  prob: 0.0375 },
+    { sum: 3000,  prob: 0.0375 },
+    { sum: 4000,  prob: 0.0375 },
+    { sum: 6000,  prob: 0.0375 },
+    { sum: 7000,  prob: 0.0375 },
+    { sum: 8000,  prob: 0.0375 },
+    { sum: 9000,  prob: 0.0375 },
     { sum: 10000, prob: 0.0375 },
   ],
   "高校生以上": [
     { sum: 10000, prob: 0.70 },
-    { sum: 2000, prob: 0.0375 },
-    { sum: 3000, prob: 0.0375 },
-    { sum: 4000, prob: 0.0375 },
-    { sum: 5000, prob: 0.0375 },
-    { sum: 6000, prob: 0.0375 },
-    { sum: 7000, prob: 0.0375 },
-    { sum: 8000, prob: 0.0375 },
-    { sum: 9000, prob: 0.0375 },
+    { sum: 2000,  prob: 0.0375 },
+    { sum: 3000,  prob: 0.0375 },
+    { sum: 4000,  prob: 0.0375 },
+    { sum: 5000,  prob: 0.0375 },
+    { sum: 6000,  prob: 0.0375 },
+    { sum: 7000,  prob: 0.0375 },
+    { sum: 8000,  prob: 0.0375 },
+    { sum: 9000,  prob: 0.0375 },
   ]
 };
 
@@ -260,7 +281,9 @@ const billImages = {
   10000: 'shibusawa.png'
 };
 
+// ------------------------------------------
 // DOM要素
+// ------------------------------------------
 const gradeSelect   = document.getElementById('gradeSelect');
 const drawNumberBtn = document.getElementById('drawNumberBtn');
 const drawTypeBtn   = document.getElementById('drawTypeBtn');
@@ -272,26 +295,27 @@ const billCountSpan    = document.getElementById('billCount');
 const billTypesDisplay = document.getElementById('billTypesDisplay');
 const billsContainer   = document.getElementById('billsContainer');
 
-// 変数
+// グローバル変数
 let numberOfBills = 0; // 抽選された"枚数"
 let finalSum      = 0; // 抽選された"合計金額"
 
-// ------------------------
-// 学年未選択をチェック
-// ------------------------
+
+// ----------------------------------------------------------------
+// 学年未選択なら「枚数を抽選」ボタンを押せないよう制御
+// ----------------------------------------------------------------
 gradeSelect.addEventListener('change', () => {
   if (gradeSelect.value === "") {
-    // 未選択の場合、ボタン無効化
     drawNumberBtn.disabled = true;
   } else {
-    // 学年が選択されたら有効化
     drawNumberBtn.disabled = false;
   }
 });
 
-// ------------------------
-// (1) 枚数を抽選する
-// ------------------------
+// ----------------------------------------------------------------
+// (1) 枚数を抽選
+//    - 1.5秒ほどルーレット演出（1〜10をランダム表示）
+//    - 演出終了後、学年別の確率分布から最終枚数を決定
+// ----------------------------------------------------------------
 drawNumberBtn.addEventListener('click', () => {
   billCountDisplay.style.display = 'none';
   billTypesDisplay.style.display = 'none';
@@ -299,7 +323,7 @@ drawNumberBtn.addEventListener('click', () => {
   numberOfBills = 0;
   finalSum = 0;
 
-  // ルーレット演出で 1~10 を表示 → 最終決定
+  // ルーレット演出
   const duration = 1500; // ms
   let startTime  = null;
   let spinTimer  = null;
@@ -308,7 +332,7 @@ drawNumberBtn.addEventListener('click', () => {
     if (!startTime) startTime = timestamp;
     const elapsed = timestamp - startTime;
 
-    // 1〜10 の中からルーレット表示
+    // 1〜10 の中から見せかけのルーレット値
     const tmp = getRandomInt(1, 10);
     countRoulette.textContent = tmp + '枚';
 
@@ -318,51 +342,47 @@ drawNumberBtn.addEventListener('click', () => {
       cancelAnimationFrame(spinTimer);
       countRoulette.textContent = '';
 
-      // 実際の最終抽選
-      numberOfBills = getRandomInt(1, 10);
+      // 学年ごとの確率分布に基づいて最終枚数を決定
+      const grade = gradeSelect.value;
+      numberOfBills = drawNumberOfBills(grade); 
+      
       billCountSpan.textContent = numberOfBills;
-
       billCountDisplay.style.display = 'block';
     }
   }
   requestAnimationFrame(spin);
 });
 
-// ------------------------
-// (2) 金額を抽選する
-// ------------------------
+// ----------------------------------------------------------------
+// (2) 金額を抽選
+//    - 学年区分に応じた"金額"確率分布から合計金額を決定
+//    - numberOfBills枚に分解できるかをチェックし、ダメなら再抽選
+// ----------------------------------------------------------------
 drawTypeBtn.addEventListener('click', () => {
   billTypesDisplay.style.display = 'none';
   billsContainer.innerHTML = '';
 
-  // 学年に応じた確率分布を取得
   const grade = gradeSelect.value;
   const dist  = distributionData[grade];
 
-  // 条件を満たす(紙幣の組合せが可能)まで試行
   let attempts = 0;
   const MAX_ATTEMPTS = 100;
   let success = false;
 
   while (!success && attempts < MAX_ATTEMPTS) {
     attempts++;
-    // 確率分布から最終金額を1つ抽選
-    finalSum = drawFinalSum(dist);
-
-    // finalSum を numberOfBills 枚の紙幣(1000,5000,10000)に分解可能か？
-    const possible = canDecompose(finalSum, numberOfBills);
-    if (possible) {
+    finalSum = drawFinalSum(dist); // 確率分布から1つ抽選
+    if (canDecompose(finalSum, numberOfBills)) {
       success = true;
     }
   }
 
   if (!success) {
-    // 100回やっても合わなかった場合は、やり直し促す or 処理
-    alert("抽選に失敗しました。もう一度やり直してください。");
+    alert("条件に合う金額が決まりませんでした。もう一度お試しください。");
     return;
   }
 
-  // 紙幣画像を表示
+  // numberOfBills枚の組合せで分解
   const bills = decompose(finalSum, numberOfBills);
   bills.forEach(b => {
     const img = document.createElement('img');
@@ -380,9 +400,50 @@ drawTypeBtn.addEventListener('click', () => {
   }, 400);
 });
 
-// ---------------------------------------------------------
-// 学年別の確率分布 dist から最終金額を1つ抽選する
-// ---------------------------------------------------------
+// ----------------------------------------------------
+// ■ 学年ごとの「枚数」確率分布を生成する関数
+//   mainNumが70%、それ以外の(1〜10, except mainNum)を
+//   30%で均等割り
+// ----------------------------------------------------
+function makeNumberDist(mainNum) {
+  // 1〜10 の中で mainNum だけが70%,
+  // 残り9つの数字に合計30%を均等に割り当て = 30%/9 ≈ 0.0333
+  const arr = [];
+  const others = [];
+  for (let i=1; i<=10; i++){
+    if (i === mainNum) {
+      arr.push({ count: i, prob: 0.70 });
+    } else {
+      others.push(i);
+    }
+  }
+  const pOthers = 0.30 / others.length; // 9 だと 0.0333...
+  for (let o of others) {
+    arr.push({ count: o, prob: pOthers });
+  }
+  return arr;
+}
+
+// ----------------------------------------------------
+// ■ 学年ごとの「枚数」分布から1つ抽選
+// ----------------------------------------------------
+function drawNumberOfBills(grade) {
+  const dist = gradeNumberDist[grade]; // [{count, prob}, ...]
+  const r = Math.random();
+  let cumulative = 0;
+  for (let i = 0; i < dist.length; i++) {
+    cumulative += dist[i].prob;
+    if (r <= cumulative) {
+      return dist[i].count;
+    }
+  }
+  // 念のため
+  return dist[0].count;
+}
+
+// ----------------------------------------------------
+// ■ 学年ごとの「金額」分布から1つ抽選
+// ----------------------------------------------------
 function drawFinalSum(dist) {
   const r = Math.random();
   let cumulative = 0;
@@ -396,76 +457,60 @@ function drawFinalSum(dist) {
   return dist[0].sum;
 }
 
-// ---------------------------------------------------------
-// finalSum を "exactly numberOfBills 枚" の(1000,5000,10000)で
-// 構成できるかどうかを判定 (true/false)
-// ---------------------------------------------------------
+// ----------------------------------------------------
+// finalSumを "exactly numberOfBills 枚" の(1000,5000,10000)で
+// 構成できるかを判定 (true/false)
+// ----------------------------------------------------
 function canDecompose(finalSum, numberOfBills) {
-  // 簡単な上限下限チェック
-  // (最小→ 全部1000円、最大→全部10000円で実際可能か？)
   const minPossible = 1000 * numberOfBills;
   const maxPossible = 10000 * numberOfBills;
-
   if (finalSum < minPossible || finalSum > maxPossible) {
     return false;
   }
-
-  // 実際に分解できるかどうか
-  // greedy で試行 (優先的に大きい紙幣から詰めていき、最後にexactならtrue)
-  // ただし、順序を変えても成立しないケースがあるかもしれないので
-  // ここでは簡易的にバックトラックはせず、以下のロジックで判定:
-  // -> あまりに複雑になる場合は別の方法が必要だが、簡易版でやってみる
   return tryGreedyDecompose(finalSum, numberOfBills);
 }
 
-// ---------------------------------------------------------
-// グリーディ法で分解試行：最終的に枚数ピッタリ & 金額ピッタリならtrue
-// ---------------------------------------------------------
+// ----------------------------------------------------
+// グリーディ法で分解試行：
+// なるべく大きい紙幣から詰め、最後にピッタリならtrue
+// ----------------------------------------------------
 function tryGreedyDecompose(amount, billsCount) {
-  let countUsed = 0;
-  let remainder = amount;
-
-  // なるべく大きい紙幣から詰める
-  // ただし枚数を超えてはならない
+  let used = 0;
+  let rem  = amount;
   const denominations = [10000, 5000, 1000];
 
   for (let d of denominations) {
-    while (remainder >= d && countUsed < billsCount) {
-      remainder -= d;
-      countUsed++;
-      if (countUsed > billsCount) break;
+    while (rem >= d && used < billsCount) {
+      rem  -= d;
+      used++;
     }
   }
-
-  // 最終的に金額が0かつ枚数ピッタリか
-  return (remainder === 0 && countUsed === billsCount);
+  return (rem === 0 && used === billsCount);
 }
 
-// ---------------------------------------------------------
-// finalSumを 実際に numberOfBills 枚の(1000,5000,10000)に分解
-// グリーディで構成した紙幣の配列を返す
-// (必ず事前に canDecompose が true の場合のみ呼ぶ想定)
-// ---------------------------------------------------------
+// ----------------------------------------------------
+// finalSumを実際に numberOfBills 枚の(1000,5000,10000)に分解
+// (canDecomposeがtrueの場合を想定)
+// ----------------------------------------------------
 function decompose(finalSum, numberOfBills) {
-  let remainder = finalSum;
-  let countUsed = 0;
-  const result = [];
+  let rem   = finalSum;
+  let used  = 0;
+  const out = [];
   const denominations = [10000, 5000, 1000];
 
   for (let d of denominations) {
-    while (remainder >= d && countUsed < numberOfBills) {
-      remainder -= d;
-      countUsed++;
-      result.push(d);
-      if (countUsed >= numberOfBills) break;
+    while (rem >= d && used < numberOfBills) {
+      rem  -= d;
+      used++;
+      out.push(d);
     }
   }
-  return result;
+  return out; 
 }
 
-// ---------------------------------------------------------
+// ----------------------------------------------------
 // min〜max の整数乱数
-// ---------------------------------------------------------
+// ----------------------------------------------------
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
