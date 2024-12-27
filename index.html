@@ -3,34 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <title>お年玉抽選ツール</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to right, #ffecd2, #fcb69f);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #ff4500;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1em;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin: 10px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #billCountDisplay, #billTypesDisplay {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .bill-image {
+            width: 80px;
+            height: auto;
+            margin: 5px;
+            transition: transform 0.3s;
+        }
+
+        .bill-image:hover {
+            transform: scale(1.1);
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>🎉 お年玉抽選ツール 🎉</h1>
-        <button id="drawButton">抽選する</button>
-
-        <div id="animationArea">
-            <!-- 枚数抽選の表示 -->
-            <div id="billCount" class="hidden">
-                <h2>紙幣枚数を抽選中...</h2>
-                <div class="spinner">🔄</div>
-            </div>
-
-            <!-- 紙幣種別の表示 -->
-            <div id="billTypes" class="hidden">
-                <h2>紙幣を抽選中...</h2>
-                <div class="bills"></div>
-            </div>
-
-            <!-- 合計金額の表示 -->
-            <div id="totalAmount" class="hidden">
-                <h2>合計金額</h2>
-                <div id="amount">0円</div>
-            </div>
+        <button id="drawNumberBtn">紙幣枚数を抽選する</button>
+        <div id="billCountDisplay">
+            <h2>紙幣の枚数: <span id="billCount">-</span> 枚</h2>
+            <button id="drawTypeBtn">紙幣の種別を抽選する</button>
+        </div>
+        <div id="billTypesDisplay">
+            <div id="billsContainer"></div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        const drawNumberBtn = document.getElementById('drawNumberBtn');
+        const drawTypeBtn = document.getElementById('drawTypeBtn');
+        const billCountDisplay = document.getElementById('billCountDisplay');
+        const billCountSpan = document.getElementById('billCount');
+        const billTypesDisplay = document.getElementById('billTypesDisplay');
+        const billsContainer = document.getElementById('billsContainer');
+
+        const billValues = [1000, 5000, 10000];
+        const billImages = {
+            1000: 'kitasato.png',
+            5000: 'umeko.png',
+            10000: 'shibusawa.png'
+        };
+
+        let numberOfBills = 0;
+        let billTypes = [];
+        const MIN_AMOUNT = 2000;
+        const MAX_AMOUNT = 10000;
+        const MAX_ATTEMPTS = 100;
+
+        drawNumberBtn.addEventListener('click', drawNumber);
+        drawTypeBtn.addEventListener('click', drawTypes);
+
+        function drawNumber() {
+            numberOfBills = getRandomInt(1, 10);
+            billCountSpan.textContent = numberOfBills;
+            billCountDisplay.style.display = 'block';
+            billTypesDisplay.style.display = 'none';
+            billsContainer.innerHTML = '';
+        }
+
+        function drawTypes() {
+            let attempts = 0;
+            let valid = false;
+            let total = 0;
+            billTypes = [];
+
+            while (!valid && attempts < MAX_ATTEMPTS) {
+                attempts++;
+                billTypes = [];
+                total = 0;
+                for (let i = 0; i < numberOfBills; i++) {
+                    const bill = billValues[getRandomInt(0, billValues.length - 1)];
+                    billTypes.push(bill);
+                    total += bill;
+                }
+                if (total >= MIN_AMOUNT && total <= MAX_AMOUNT) {
+                    valid = true;
+                }
+            }
+
+            if (valid) {
+                displayBills(billTypes);
+                setTimeout(() => {
+                    alert(`あなたの今年のお年玉は${total}円！`);
+                }, 500);
+            } else {
+                alert('再抽選してください。条件に合う金額が出ませんでした。');
+            }
+        }
+
+        function displayBills(bills) {
+            billsContainer.innerHTML = '';
+            bills.forEach(bill => {
+                const img = document.createElement('img');
+                img.src = billImages[bill];
+                img.alt = `${bill}円`;
+                img.className = 'bill-image';
+                billsContainer.appendChild(img);
+            });
+            billTypesDisplay.style.display = 'block';
+        }
+
+        // ランダムな整数を取得（minからmaxの範囲、両端含む）
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+    </script>
 </body>
 </html>
