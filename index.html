@@ -399,19 +399,34 @@ const patternByGrade = {
       { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
     ]
   },
-  "中3": {
-    main: {
-      combo: [5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"],
-      prob: 0.70
-    },
-    subs: [
-      // 同様
-      { combo: [1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-      // ... 同様に多数用意
-      // 省略
-      { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
-    ]
+ "中3": {
+  main: {
+    combo: [5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"],
+    prob: 0.70
   },
+  subs: [
+    // 2000円（1000×2）
+    { combo: [1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
+    // 3000円（1000×3）
+    { combo: [1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
+    // 4000円（1000×4）
+    { combo: [1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
+    // 7000円（5000 + 1000×2）
+    { combo: [5000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
+    // 8000円（5000 + 1000×3）
+    { combo: [5000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure"] },
+    // 9000円（5000 + 1000×4）
+    { combo: [5000,1000,1000,1000,1000,"hazure","hazure","hazure","hazure","hazure"] },
+    // 5000円×2 ＝10000円
+    { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
+    // 1000円×10 =10000円
+    { combo: [1000,1000,1000,1000,1000,1000,1000,1000,1000,1000] },
+    // 10000円(1枚)
+    { combo: [10000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
+    // お好みで重複パターン or 別アレンジ
+    { combo: [5000,5000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"] },
+  ]
+},
 
   // ----- 高校生以上 -----
   "高校生以上": {
