@@ -3,47 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <title>お年玉抽選ツール</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #f0f8ff;
-            padding: 20px;
-        }
-        #result {
-            margin-top: 20px;
-        }
-        .bill-image {
-            width: 100px;
-            height: auto;
-            margin: 5px;
-        }
-        #total {
-            font-size: 24px;
-            margin-top: 20px;
-            color: #ff4500;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 18px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <div class="container">
+        <h1>🎉 お年玉抽選ツール 🎉</h1>
+        <button id="drawButton">抽選する</button>
 
-    <h1>お年玉抽選ツール</h1>
-    <button onclick="drawGift()">抽選する</button>
+        <div id="animationArea">
+            <!-- 枚数抽選の表示 -->
+            <div id="billCount" class="hidden">
+                <h2>紙幣枚数を抽選中...</h2>
+                <div class="spinner">🔄</div>
+            </div>
 
-    <div id="result"></div>
-    <div id="total"></div>
+            <!-- 紙幣種別の表示 -->
+            <div id="billTypes" class="hidden">
+                <h2>紙幣を抽選中...</h2>
+                <div class="bills"></div>
+            </div>
+
+            <!-- 合計金額の表示 -->
+            <div id="totalAmount" class="hidden">
+                <h2>合計金額</h2>
+                <div id="amount">0円</div>
+            </div>
+        </div>
+    </div>
 
     <script src="script.js"></script>
 </body>
