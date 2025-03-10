@@ -2,139 +2,352 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>お年玉抽選ツール</title>
-  <!-- スマホ対応 -->
+  <title>お年玉ガチャ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+    
+    :root {
+      --primary: #3a86ff;
+      --secondary: #ff006e;
+      --success: #38b000;
+      --warning: #ffbe0b;
+      --danger: #ff5252;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gray: #6c757d;
+      --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
     body {
-      font-family: 'Helvetica Neue', Arial, sans-serif;
-      background: linear-gradient(to right, #ffecd2, #fcb69f);
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: #f5f7fa;
+      color: var(--dark);
+      line-height: 1.6;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
+      padding: 20px;
+    }
+    
+    .app-container {
+      width: 100%;
+      max-width: 500px;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .app-header {
+      padding: 24px;
+      background: var(--primary);
+      color: white;
+      text-align: center;
+    }
+    
+    .app-title {
+      font-size: 1.5rem;
+      font-weight: 700;
       margin: 0;
     }
-    .container {
-      text-align: center;
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.3);
-      width: 95%;
-      max-width: 480px;
+    
+    .app-content {
+      padding: 24px;
     }
-    h1 {
-      font-size: 1.8rem;
-      margin-bottom: 10px;
-      color: #ff4500;
-    }
-    .select-wrapper {
+    
+    .form-group {
       margin-bottom: 20px;
     }
-    label {
-      font-size: 1rem;
-      margin-right: 5px;
+    
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: var(--dark);
     }
-    select {
-      font-size: 1rem;
-      padding: 6px 10px;
-      border-radius: 5px;
+    
+    .form-select {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 16px;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      background-color: white;
+      transition: var(--transition);
+      font-family: 'Noto Sans JP', sans-serif;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23495057' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
     }
-    button {
-      padding: 12px 20px;
-      font-size: 1rem;
-      background-color: #4CAF50;
+    
+    .form-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(58, 134, 255, 0.2);
+    }
+    
+    .gacha-button {
+      display: block;
+      width: 100%;
+      padding: 14px 20px;
+      background: var(--primary);
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 700;
       cursor: pointer;
-      transition: background-color 0.3s ease;
-      margin: 10px 5px;
-    }
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    button:hover:enabled {
-      background-color: #45a049;
-    }
-    #drawArea {
-      margin-top: 15px;
-      min-height: 200px; /* 結果表示スペース */
-    }
-    .slot {
-      display: inline-block;
-      margin: 5px;
+      transition: var(--transition);
+      font-family: 'Noto Sans JP', sans-serif;
       text-align: center;
-      vertical-align: top;
-      width: 80px;
-      height: 110px;
       position: relative;
+      overflow: hidden;
     }
-    .slot img {
-      width: 60px;
-      height: auto;
-      transition: transform 0.3s;
+    
+    .gacha-button:hover {
+      background: #2c78f8;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(58, 134, 255, 0.3);
     }
-    .slot img:hover {
-      transform: scale(1.1);
+    
+    .gacha-button:active {
+      transform: translateY(1px);
     }
-    .slot .amount-label {
-      display: block;
+    
+    .gacha-button:disabled {
+      background: #b9c9e6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .gacha-button .shine {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.3) 50%,
+        rgba(255, 255, 255, 0) 100%
+      );
+      transform: skewX(-20deg);
+      transition: none;
+    }
+    
+    .gacha-button:hover .shine {
+      left: 150%;
+      transition: all 0.7s ease;
+    }
+    
+    .gacha-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 12px;
+      margin: 24px 0;
+    }
+    
+    .gacha-card {
+      position: relative;
+      width: 100%;
+      height: 110px;
+      perspective: 1000px;
+      cursor: pointer;
+    }
+    
+    .gacha-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.8s;
+      transform-style: preserve-3d;
+    }
+    
+    .gacha-card.flipped .gacha-card-inner {
+      transform: rotateY(180deg);
+    }
+    
+    .gacha-card-front,
+    .gacha-card-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+    }
+    
+    .gacha-card-front {
+      background: linear-gradient(135deg, #5a67d8, #3f57d6);
+      box-shadow: var(--card-shadow);
+    }
+    
+    .gacha-card-back {
+      background: white;
+      transform: rotateY(180deg);
+      border: 1px solid #eaedf1;
+      box-shadow: var(--card-shadow);
+    }
+    
+    .gacha-card-back.win {
+      background: linear-gradient(135deg, #f6ffed, #d9f7be);
+    }
+    
+    .gacha-card-back.lose {
+      background: linear-gradient(135deg, #f6f7f9, #ebedf0);
+    }
+    
+    .gacha-card-icon {
+      font-size: 32px;
+      color: white;
+      margin-bottom: 6px;
+    }
+    
+    .gacha-card-image {
+      width: 48px;
+      height: 48px;
+      object-fit: contain;
+      margin-bottom: 8px;
+    }
+    
+    .gacha-card-value {
       font-size: 0.9rem;
-      margin-top: 3px;
-      color: #333;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    
+    .gacha-card-value.win {
+      color: #389e0d;
+    }
+    
+    .gacha-card-value.lose {
+      color: var(--gray);
+    }
+    
+    .result-container {
+      margin-top: 20px;
+      text-align: center;
+      min-height: 60px;
+      transition: var(--transition);
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    
+    .result-container.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .result-box {
+      display: inline-block;
+      background: linear-gradient(135deg, #f6ffed, #d9f7be);
+      padding: 16px 24px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .result-title {
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    
+    .result-amount {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--success);
+    }
+    
+    /* 金額表示エフェクト */
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    /* ビル画像グロー効果 */
+    .glow {
+      filter: drop-shadow(0 0 3px rgba(56, 176, 0, 0.7));
     }
   </style>
 </head>
 <body>
-<div class="container">
-  <h1>🎉お年玉抽選🎉</h1>
-
-  <!-- 学年区分選択 -->
-  <div class="select-wrapper">
-    <label for="gradeSelect">学年を選択：</label>
-    <select id="gradeSelect">
-      <option value="">選択してください</option>
-      <option value="未就学児">未就学児</option>
-      <option value="小1">小1</option>
-      <option value="小2">小2</option>
-      <option value="小3">小3</option>
-      <option value="小4">小4</option>
-      <option value="小5">小5</option>
-      <option value="小6">小6</option>
-      <option value="中1">中1</option>
-      <option value="中2">中2</option>
-      <option value="中3">中3</option>
-      <option value="高校生以上">高校生以上</option>
-    </select>
+<div class="app-container">
+  <div class="app-header">
+    <h1 class="app-title">お年玉ガチャ</h1>
   </div>
-
-  <!-- 10連ガチャボタン -->
-  <button id="drawButton" disabled>10連ガチャを回す</button>
-
-  <!-- ガチャ結果表示エリア -->
-  <div id="drawArea"></div>
+  
+  <div class="app-content">
+    <div class="form-group">
+      <label for="gradeSelect" class="form-label">学年を選択</label>
+      <select id="gradeSelect" class="form-select">
+        <option value="">選択してください</option>
+        <option value="未就学児">未就学児</option>
+        <option value="小1">小1</option>
+        <option value="小2">小2</option>
+        <option value="小3">小3</option>
+        <option value="小4">小4</option>
+        <option value="小5">小5</option>
+        <option value="小6">小6</option>
+        <option value="中1">中1</option>
+        <option value="中2">中2</option>
+        <option value="中3">中3</option>
+        <option value="高校生以上">高校生以上</option>
+      </select>
+    </div>
+    
+    <button id="drawButton" class="gacha-button" disabled>
+      ガチャを回す
+      <div class="shine"></div>
+    </button>
+    
+    <div id="gachaGrid" class="gacha-grid"></div>
+    
+    <div id="resultContainer" class="result-container">
+      <!-- 結果がここに表示されます -->
+    </div>
+  </div>
 </div>
 
 <script>
 //===================================================================
-// 1) 紙幣/ハズレ 画像マップ
+// 紙幣/ハズレ 画像マップ
 //===================================================================
 const imageMap = {
-  1000: 'kitasato.png',
-  5000: 'umeko.png',
-  10000: 'shibusawa.png',
+  1000: 'kitasato.png',  // 北里柴三郎
+  5000: 'umeko.png',     // 津田梅子
+  10000: 'shibusawa.png', // 渋沢栄一
   hazure: 'hazure.png'
 };
 
 //===================================================================
-// 2) メインパターン(70%)とサブパターン(30%)を各学年区分に定義
-//   (省略なし完全版、各学年メイン1つ+サブ10個ずつ、comboはすべて要素10個)
+// 各学年のガチャパターン
 //===================================================================
 const patternByGrade = {
-  // --- 以下は前の回答の完全版をコピペ ---
   "未就学児": {
     main: {
       combo: [1000,1000,"hazure","hazure","hazure","hazure","hazure","hazure","hazure","hazure"],
@@ -335,111 +548,7 @@ const patternByGrade = {
   }
 };
 
-//---------------------------------------------------------
-// イベントリスナー
-//---------------------------------------------------------
+// DOM要素
 const gradeSelect = document.getElementById('gradeSelect');
-const drawButton  = document.getElementById('drawButton');
-const drawArea    = document.getElementById('drawArea');
-
-gradeSelect.addEventListener('change', () => {
-  drawButton.disabled = (gradeSelect.value === "");
-});
-
-//---------------------------------------------------------
-// 10連ガチャを回す (非同期問題を回避するために currentIndex を使用)
-//---------------------------------------------------------
-drawButton.addEventListener('click', () => {
-  drawArea.innerHTML = ''; // リセット
-
-  const gradeData = patternByGrade[gradeSelect.value];
-  if (!gradeData) return;
-
-  // メイン or サブ を確率で選ぶ
-  const r = Math.random();
-  let finalCombo;
-  if (r <= gradeData.main.prob) {
-    finalCombo = gradeData.main.combo;
-  } else {
-    const subs = gradeData.subs;
-    const x = (r - gradeData.main.prob) / 0.30; 
-    const idx = Math.floor(x * subs.length);
-    finalCombo = subs[idx].combo;
-  }
-
-  // シャッフル
-  const shuffled = shuffleArray(finalCombo.slice());
-  const total = calcTotal(finalCombo);
-
-  let index = 0;
-  const maxPulls = 10;
-
-  function pullOne() {
-    // ループ終了判定
-    if (index >= maxPulls) {
-      setTimeout(() => {
-        alert(`あなたのお年玉は${total}円です！`);
-      }, 400);
-      return;
-    }
-
-    // 今のindexをローカル変数に保存 (setTimeoutのズレを防ぐ)
-    const currentIndex = index;
-    index++;
-
-    // スロット要素を作成
-    const slotDiv = document.createElement('div');
-    slotDiv.className = 'slot';
-    const img = document.createElement('img');
-    const label = document.createElement('span');
-    label.className = 'amount-label';
-
-    slotDiv.appendChild(img);
-    slotDiv.appendChild(label);
-    drawArea.appendChild(slotDiv);
-
-    // 0.3秒後に結果を確定
-    setTimeout(() => {
-      const val = shuffled[currentIndex];
-      if (val === "hazure") {
-        img.src = imageMap.hazure;
-        label.textContent = "ハズレ";
-      } else {
-        img.src = imageMap[val];
-        label.textContent = val + "円";
-      }
-    }, 300);
-
-    // 次の抽選へ 0.6秒後
-    setTimeout(pullOne, 600);
-  }
-
-  pullOne(); // 最初の呼び出し
-});
-
-//---------------------------------------------------------
-// 配列をシャッフル(Fisher-Yates)
-//---------------------------------------------------------
-function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random()*(i+1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-//---------------------------------------------------------
-// 10個の要素から合計金額を算出
-//---------------------------------------------------------
-function calcTotal(arrayOf10) {
-  let sum = 0;
-  for (let val of arrayOf10) {
-    if (val !== "hazure") {
-      sum += (typeof val === "number" ? val : 0);
-    }
-  }
-  return sum;
-}
-</script>
-</body>
-</html>
+const drawButton = document.getElementById('drawButton');
+const gacha
