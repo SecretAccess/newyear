@@ -160,6 +160,7 @@
       grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
       gap: 12px;
       margin: 24px 0;
+      min-height: 200px;
     }
     
     .gacha-card {
@@ -217,7 +218,7 @@
     }
     
     .gacha-card-icon {
-      font-size: 32px;
+      font-size: 24px;
       color: white;
       margin-bottom: 6px;
     }
@@ -551,4 +552,183 @@ const patternByGrade = {
 // DOM要素
 const gradeSelect = document.getElementById('gradeSelect');
 const drawButton = document.getElementById('drawButton');
-const gacha
+const gachaGrid = document.getElementById('gachaGrid');
+const resultContainer = document.getElementById('resultContainer');
+
+// 学年選択時のイベントリスナー
+gradeSelect.addEventListener('change', () => {
+  drawButton.disabled = (gradeSelect.value === "");
+  gachaGrid.innerHTML = '';
+  resultContainer.innerHTML = '';
+  resultContainer.classList.remove('visible');
+});
+
+// ガチャボタンクリック時のイベントリスナー
+drawButton.addEventListener('click', () => {
+  // リセット
+  gachaGrid.innerHTML = '';
+  resultContainer.innerHTML = '';
+  resultContainer.classList.remove('visible');
+  
+  const gradeData = patternByGrade[gradeSelect.value];
+  if (!gradeData) return;
+  
+  // メイン or サブ を確率で選ぶ
+  const r = Math.random();
+  let finalCombo;
+  if (r <= gradeData.main.prob) {
+    finalCombo = gradeData.main.combo;
+  } else {
+    const subs = gradeData.subs;
+    const x = (r - gradeData.main.prob) / 0.30; 
+    const idx = Math.floor(x * subs.length);
+    finalCombo = subs[idx].combo;
+  }
+  
+  // シャッフル
+  const shuffled = shuffleArray(finalCombo.slice());
+  const total = calcTotal(finalCombo);
+  
+  // 10枚のカードを作成
+  for (let i = 0; i < 10; i++) {
+    const card = createCard(i);
+    gachaGrid.appendChild(card);
+  }
+  
+  // カードをめくっていく
+  let index = 0;
+  flipNextCard();
+  
+  function flipNextCard() {
+    if (index >= 10) {
+      // すべてのカードをめくり終わったら結果表示
+      setTimeout(() => {
+        showResult(total);
+      }, 500);
+      return;
+    }
+    
+    const card = document.getElementById(`card-${index}`);
+    const value = shuffled[index];
+    
+    // カードの裏面を設定
+    const cardBack = card.querySelector('.gacha-card-back');
+    const cardImage = card.querySelector('.gacha-card-image');
+    const cardValue = card.querySelector('.gacha-card-value');
+    
+    if (value === "hazure") {
+      cardBack.classList.add('lose');
+      cardImage.src = imageMap.hazure;
+      cardImage.alt = "ハズレ";
+      cardValue.textContent = "ハズレ";
+      cardValue.classList.add('lose');
+    } else {
+      cardBack.classList.add('win');
+      cardImage.src = imageMap[value];
+      cardImage.alt = `${value}円`;
+      cardValue.textContent = `${value}円`;
+      cardValue.classList.add('win');
+      
+      // 当たりの場合はエフェクト追加
+      cardImage.classList.add('glow');
+      if (value >= 5000) {
+        cardValue.classList.add('pulse');
+      }
+    }
+    
+    // カードをめくる
+    setTimeout(() => {
+      card.classList.add('flipped');
+      index++;
+      
+      // 次のカードをめくる
+      setTimeout(flipNextCard, 300);
+    }, 200);
+  }
+  
+  // 最終結果表示
+  function showResult(amount) {
+    const resultBox = document.createElement('div');
+    resultBox.className = 'result-box';
+    
+    const resultTitle = document.createElement('div');
+    resultTitle.className = 'result-title';
+    resultTitle.textContent = 'お年玉の合計';
+    
+    const resultAmount = document.createElement('div');
+    resultAmount.className = 'result-amount';
+    resultAmount.textContent = `${amount.toLocaleString()}円`;
+    
+    resultBox.appendChild(resultTitle);
+    resultBox.appendChild(resultAmount);
+    resultContainer.appendChild(resultBox);
+    
+    // 表示アニメーション
+    setTimeout(() => {
+      resultContainer.classList.add('visible');
+    }, 100);
+  }
+  
+  // カード要素作成
+  function createCard(index) {
+    const card = document.createElement('div');
+    card.className = 'gacha-card';
+    card.id = `card-${index}`;
+    
+    const cardInner = document.createElement('div');
+    cardInner.className = 'gacha-card-inner';
+    
+    // 表面
+    const cardFront = document.createElement('div');
+    cardFront.className = 'gacha-card-front';
+    
+    const cardIcon = document.createElement('div');
+    cardIcon.className = 'gacha-card-icon';
+    cardIcon.textContent = '?';
+    
+    // 裏面
+    const cardBack = document.createElement('div');
+    cardBack.className = 'gacha-card-back';
+    
+    const cardImage = document.createElement('img');
+    cardImage.className = 'gacha-card-image';
+    
+    const cardValue = document.createElement('div');
+    cardValue.className = 'gacha-card-value';
+    
+    // 組み立て
+    cardFront.appendChild(cardIcon);
+    cardBack.appendChild(cardImage);
+    cardBack.appendChild(cardValue);
+    
+    cardInner.appendChild(cardFront);
+    cardInner.appendChild(cardBack);
+    
+    card.appendChild(cardInner);
+    
+    return card;
+  }
+});
+
+// 配列をシャッフル (Fisher-Yates)
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// 合計金額を計算
+function calcTotal(array) {
+  let sum = 0;
+  for (let val of array) {
+    if (val !== "hazure") {
+      sum += (typeof val === "number" ? val : 0);
+    }
+  }
+  return sum;
+}
+  </script>
+</body>
+</html>
